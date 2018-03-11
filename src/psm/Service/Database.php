@@ -21,7 +21,7 @@
  * @author      Pepijn Over <pep@mailbox.org>
  * @copyright   Copyright (c) 2008-2017 Pepijn Over <pep@mailbox.org>
  * @license     http://www.gnu.org/licenses/gpl.txt GNU GPL v3
- * @version     Release: @package_version@
+ * @version     Release: v3.2.0
  * @link        http://www.phpservermonitor.org/
  **/
 
@@ -512,6 +512,7 @@ class Database {
 			$this->pdo->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 			$this->status = true;
 		} catch (\PDOException $e) {
+			echo $e->getMessage();
 			$this->status = false;
 			return $this->onConnectFailure($e);
 		}

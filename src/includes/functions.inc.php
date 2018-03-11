@@ -677,23 +677,12 @@ function psm_password_encrypt($key, $password)
 
     if (empty($key))
         throw new \InvalidArgumentException('invalid_encryption_key');
-
-    $iv = mcrypt_create_iv(
-		mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC),
-		MCRYPT_DEV_URANDOM
-	);
-
-	$encrypted = base64_encode(
-		$iv .
-		mcrypt_encrypt(
-			MCRYPT_RIJNDAEL_128,
-			hash('sha256',  $key, true),
-			$password,
-			MCRYPT_MODE_CBC,
-			$iv
-		)
-	);
-
+        $salt = 'cH!swe!retReGu7W6bEDRup7usuDUh9THeD2CHeGE*ewr4n39=E@rAsp7c-Ph@pH';
+        $iv_size = openssl_cipher_iv_length( "AES-256-CBC" );
+        $hash = hash( 'sha256', $salt . $key . $salt );
+        $iv = substr( $hash, strlen( $hash ) - $iv_size );
+        $key = substr( $hash, 0, 32 );
+        $encrypted = base64_encode( openssl_encrypt( $data, "AES-256-CBC", $key, OPENSSL_RAW_DATA, $iv ) );
 	return $encrypted;
 }
 
@@ -712,20 +701,13 @@ function psm_password_decrypt($key, $encryptedString)
 
 	if (empty($key))
          throw new \InvalidArgumentException('invalid_encryption_key');
-	
-	$data = base64_decode($encryptedString);
-	$iv = substr($data, 0, mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC));
 
-	$decrypted = rtrim(
-		mcrypt_decrypt(
-			MCRYPT_RIJNDAEL_128,
-			hash('sha256',  $key, true),
-			substr($data, mcrypt_get_iv_size(MCRYPT_RIJNDAEL_128, MCRYPT_MODE_CBC)),
-			MCRYPT_MODE_CBC,
-			$iv
-		),
-		"\0"
-	);
-
+        $salt = 'cH!swe!retReGu7W6bEDRup7usuDUh9THeD2CHeGE*ewr4n39=E@rAsp7c-Ph@pH';
+        $iv_size = openssl_cipher_iv_length( "AES-256-CBC" );
+        $hash = hash( 'sha256', $salt . $key . $salt );
+        $iv = substr( $hash, strlen( $hash ) - $iv_size );
+        $key = substr( $hash, 0, 32 );
+        $decrypted = openssl_decrypt( base64_decode( $data ), "AES-256-CBC", $key, OPENSSL_RAW_DATA, $iv );
+        $decrypted = rtrim( $decrypted, "\0" );
 	return $decrypted;
 }
